@@ -27,11 +27,16 @@ namespace OctopusController
         {
             //TODO: add here whatever is needed to find the bones forming the tentacle for all modes
             //you may want to use a list, and then convert it to an array and save it into _bones
+
+            List<Transform> bonesList = new List<Transform>();
+
             tentacleMode = mode;
 
             switch (tentacleMode){
                 case TentacleMode.LEG:
                     //TODO: in _endEffectorsphere you keep a reference to the base of the leg
+                    bonesList.Add(root);
+                    _endEffectorSphere = bonesList.Last();
                     break;
                 case TentacleMode.TAIL:
                     //TODO: in _endEffectorsphere you keep a reference to the red sphere 
@@ -40,6 +45,9 @@ namespace OctopusController
                     //TODO: in _endEffectorphere you  keep a reference to the sphere with a collider attached to the endEffector
                     break;
             }
+
+
+            _bones = bonesList.ToArray();
             return Bones;
         }
     }
