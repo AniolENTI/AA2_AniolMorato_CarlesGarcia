@@ -16,6 +16,7 @@ namespace OctopusController
         Transform tailEndEffector;
         MyTentacleController _tail;
         float animationRange;
+        float learningRate;
 
         //LEGS
         Transform[] legTargets;
@@ -41,8 +42,9 @@ namespace OctopusController
         {
             _tail = new MyTentacleController();
             _tail.LoadTentacleJoints(TailBase, TentacleMode.TAIL);
-            //TODO: Initialize anything needed for the Gradient Descent implementation
+            //Initialize anything needed for the Gradient Descent implementation
             tailEndEffector = _tail.Bones.Last();
+            learningRate = 0.1f;
         }
 
         //TODO: Check when to start the animation towards target and implement Gradient Descent method to move the joints.
@@ -93,8 +95,7 @@ namespace OctopusController
                     for (int i = 0; i < _tail.Bones.Length; i++)
                     {
                         // Adjust joint angles based on the gradient and learning rate
-                        float gradient = calculateGradient(_tail.Bones[i]); 
-                        float learningRate = 0.1f;
+                        float gradient = calculateGradient(_tail.Bones[i]);
                         _tail.Bones[i].Rotate(Vector3.up, gradient * learningRate);
                     }
                 }
