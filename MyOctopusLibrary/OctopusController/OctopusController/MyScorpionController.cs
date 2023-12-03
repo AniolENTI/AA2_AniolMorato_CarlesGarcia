@@ -75,9 +75,9 @@ namespace OctopusController
         private void updateLegPos()
         {
             //check for the distance to the futureBase, then if it's too far away start moving the leg towards the future base position
-            //
+            
         }
-        //TODO: implement Gradient Descent method to move tail if necessary
+        
         private void updateTail()
         {
             // Check if the tail and target are valid
@@ -93,9 +93,8 @@ namespace OctopusController
                     for (int i = 0; i < _tail.Bones.Length; i++)
                     {
                         // Adjust joint angles based on the gradient and learning rate
-                        // You may need to experiment with these values for your specific case
-                        float gradient = calculateGradient(_tail.Bones[i]); // Implement a function to calculate the gradient
-                        float learningRate = 0.1f; // Adjust as needed
+                        float gradient = calculateGradient(_tail.Bones[i]); 
+                        float learningRate = 0.1f;
                         _tail.Bones[i].Rotate(Vector3.up, gradient * learningRate);
                     }
                 }
