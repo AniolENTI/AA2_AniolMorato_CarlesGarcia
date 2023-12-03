@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 
 namespace OctopusController
@@ -20,6 +21,9 @@ namespace OctopusController
 
         Transform[] _randomTargets;// = new Transform[4];
 
+        Vector3 targetPosition;
+        Vector3 targetRegion;
+        float sqrDistance;
 
         float _twistMin, _twistMax;
         float _swingMin, _swingMax;
@@ -61,6 +65,20 @@ namespace OctopusController
             for (int i = 0; i < _tentacles.Length; i++)
             {
                 NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+
+                Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
+
+                for (int j = 0; j < _tentacles[i].Bones.Count() - 2; j++)
+                {
+                    for (int k = 1; k < j + 3 && k < _tentacles[i].Bones.Count(); k++)
+                    {
+                        RotateBone(_tentacles[i].Bones[0], _tentacles[i].Bones[k], goalPosition);
+
+                        sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
+                    }
+                }
+
+
             }
 
         }
@@ -70,6 +88,10 @@ namespace OctopusController
         {
             _currentRegion = region;
             _target = target;
+            targetPosition = new Vector3(target.position.x, target.position.y, target.position.z);
+            targetRegion = new Vector3(region.position.x, region.position.y, region.position.z);
+
+
         }
 
         public void NotifyShoot()
@@ -93,6 +115,21 @@ namespace OctopusController
 
         #region private and internal methods
         //todo: add here anything that you need
+
+        public static void RotateBone(Transform effector, Transform bone, Vector3 targetPosition)
+        {
+            Vector3 effectorPosition = effector.position;
+            Vector3 bonePosition = bone.position;
+            Quaternion boneRotation = bone.rotation;
+
+            Vector3 boneToEffector = effectorPosition - bonePosition;
+            Vector3 boneToTarget = targetPosition - bonePosition;
+
+            Quaternion fromToRotation = Quaternion.FromToRotation(boneToEffector, boneToTarget);
+            Quaternion newRotation = fromToRotation * boneRotation;
+
+            boneRotation = newRotation;
+        }
 
         void update_ccd()
         {
