@@ -79,7 +79,7 @@ namespace OctopusController
             //check for the distance to the futureBase, then if it's too far away start moving the leg towards the future base position
             
         }
-        
+
         private void updateTail()
         {
             // Check if the tail and target are valid
