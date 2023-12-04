@@ -21,9 +21,13 @@ namespace OctopusController
 
         Transform[] _randomTargets;// = new Transform[4];
 
+        
+
         Vector3 targetPosition;
         Vector3 targetRegion;
         float sqrDistance;
+        bool random = true;
+        float time = 0;
 
         float _twistMin, _twistMax;
         float _swingMin, _swingMax;
@@ -41,7 +45,7 @@ namespace OctopusController
         {
 
 
-            Debug.Log("hello, I am initializing my Octopus Controller in object " + objectName);
+            UnityEngine.Debug.Log("hello, I am initializing my Octopus Controller in object " + objectName);
 
 
         }
@@ -49,6 +53,7 @@ namespace OctopusController
         public void Init(Transform[] tentacleRoots, Transform[] randomTargets)
         {
             _tentacles = new MyTentacleController[tentacleRoots.Length];
+            
 
             // foreach (Transform t in tentacleRoots)
             for (int i = 0; i < tentacleRoots.Length; i++)
@@ -61,26 +66,12 @@ namespace OctopusController
 
             _randomTargets = randomTargets;
             //TODO: use the regions however you need to make sure each tentacle stays in its region
-
-            for (int i = 0; i < _tentacles.Length; i++)
+            for (int i = 0; i < tentacleRoots.Length; i++) 
             {
-                NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
-
-                Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
-
-                for (int j = 0; j < _tentacles[i].Bones.Count() - 2; j++)
-                {
-                    for (int k = 1; k < j + 3 && k < _tentacles[i].Bones.Count(); k++)
-                    {
-                        RotateBone(_tentacles[i].Bones[0], _tentacles[i].Bones[k], goalPosition);
-
-                        sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
-                    }
-                }
-
-
+               // _tentacles[i].Bones[1].position
             }
-
+            
+            
         }
 
 
@@ -95,16 +86,82 @@ namespace OctopusController
         }
 
         public void NotifyShoot()
-        {
+        {         
             //TODO. what happens here?
-            Debug.Log("Shoot");
+            for (int i = 0; i < _tentacles.Length; i++)
+            {
+                NotifyTarget(_tentacles[i].GetEffector, _randomTargets[i].parent);
+                random = false;
+            }
+            UnityEngine.Debug.Log("Shoot");
         }
 
 
         public void UpdateTentacles()
         {
             //TODO: implement logic for the correct tentacle arm to stop the ball and implement CCD method
-            update_ccd();
+            
+
+            if (random)
+            {
+
+                for (int i = 0; i < _tentacles.Length; i++)
+                {
+                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+
+                    Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
+
+                    for (int j = 0; j < _tentacles[i].Bones.Count() - 2; j++)
+                    {
+                        for (int k = 1; k < j + 3 && k < _tentacles[i].Bones.Count(); k++)
+                        {
+                            RotateBone(_tentacles[i].Bones[0], _tentacles[i].Bones[k], goalPosition);
+
+                            sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
+                        }
+                    }
+
+
+                }
+            }
+            else
+            {
+                
+
+                for (int i = 0; i < _tentacles.Length; i++)
+                {
+                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+
+                    Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
+
+                    for (int j = 0; j < _tentacles[i].Bones.Count() - 2; j++)
+                    {
+                        for (int k = 1; k < j + 3 && k < _tentacles[i].Bones.Count(); k++)
+                        {
+                            RotateBone(_tentacles[i].Bones[0], _tentacles[i].Bones[k], goalPosition);
+
+                            sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
+
+                            
+                        }
+                    }
+
+
+                }
+            }
+
+            for (int i = 0; i < _tentacles.Length; i++) 
+            {
+                for (int j = 0; j < _tentacles[i].Bones.Length; j++) 
+                {
+                    if (!_randomTargets[i].parent.GetComponent<BoxCollider>().bounds.Contains(_tentacles[i].Bones[j].position)) 
+                    {
+                        NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+                    }
+                }
+                
+            }
+                update_ccd();
         }
 
 
