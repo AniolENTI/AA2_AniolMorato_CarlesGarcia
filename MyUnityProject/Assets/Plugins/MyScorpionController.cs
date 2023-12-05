@@ -13,7 +13,6 @@ namespace OctopusController
     {
         //TAIL
         Transform tailTarget;
-        Vector3 auxito;
         Transform tailEndEffector;
         MyTentacleController _tail;
         float animationRange = 0.05f;
@@ -76,12 +75,15 @@ namespace OctopusController
 
         private void updateTail()
         {
-            if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) > animationRange)
+            if(tailEndEffector != null && tailTarget != null)
             {
-                for (int i = 0; i < _tail.Bones.Length - 1; i++)
+                if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) > animationRange)
                 {
-                    float descent = CalculateGradient(_tail.Bones[i]);
-                    _tail.Bones[i].transform.Rotate((Vector3.forward * -descent) * growthRate);
+                    for (int i = 0; i < _tail.Bones.Length - 1; i++)
+                    {
+                        float descent = CalculateGradient(_tail.Bones[i]);
+                        _tail.Bones[i].transform.Rotate((Vector3.forward * -descent) * growthRate);
+                    }
                 }
             }
         }
