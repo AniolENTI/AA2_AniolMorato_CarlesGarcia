@@ -21,13 +21,13 @@ namespace OctopusController
 
         Transform[] _randomTargets;// = new Transform[4];
 
-        
+
 
         Vector3 targetPosition;
         Vector3 targetRegion;
         float sqrDistance;
         bool random = true;
-        float time = 0;
+        float time = 3f;
 
         float _twistMin, _twistMax;
         float _swingMin, _swingMax;
@@ -53,7 +53,7 @@ namespace OctopusController
         public void Init(Transform[] tentacleRoots, Transform[] randomTargets)
         {
             _tentacles = new MyTentacleController[tentacleRoots.Length];
-            
+
 
             // foreach (Transform t in tentacleRoots)
             for (int i = 0; i < tentacleRoots.Length; i++)
@@ -66,12 +66,12 @@ namespace OctopusController
 
             _randomTargets = randomTargets;
             //TODO: use the regions however you need to make sure each tentacle stays in its region
-            for (int i = 0; i < tentacleRoots.Length; i++) 
+            for (int i = 0; i < tentacleRoots.Length; i++)
             {
-               // _tentacles[i].Bones[1].position
+                // _tentacles[i].Bones[1].position
             }
-            
-            
+
+
         }
 
 
@@ -86,7 +86,7 @@ namespace OctopusController
         }
 
         public void NotifyShoot()
-        {         
+        {
             //TODO. what happens here?
             for (int i = 0; i < _tentacles.Length; i++)
             {
@@ -100,7 +100,7 @@ namespace OctopusController
         public void UpdateTentacles()
         {
             //TODO: implement logic for the correct tentacle arm to stop the ball and implement CCD method
-            
+
 
             if (random)
             {
@@ -126,11 +126,10 @@ namespace OctopusController
             }
             else
             {
-                
+
 
                 for (int i = 0; i < _tentacles.Length; i++)
                 {
-                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
 
                     Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
 
@@ -142,7 +141,19 @@ namespace OctopusController
 
                             sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
 
-                            
+
+                        }
+
+                        for (int k = 0; k < _tentacles.Length; k++)
+                        {
+                            for (int l = 0; l < _tentacles[i].Bones.Length; l++)
+                            {
+                                if (!_randomTargets[k].parent.GetComponent<BoxCollider>().bounds.Contains(_tentacles[k].Bones[l].position))
+                                {
+                                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+                                }
+                            }
+
                         }
                     }
 
@@ -150,18 +161,14 @@ namespace OctopusController
                 }
             }
 
-            for (int i = 0; i < _tentacles.Length; i++) 
+            if (random && (time - Time.deltaTime <= 0))
             {
-                for (int j = 0; j < _tentacles[i].Bones.Length; j++) 
-                {
-                    if (!_randomTargets[i].parent.GetComponent<BoxCollider>().bounds.Contains(_tentacles[i].Bones[j].position)) 
-                    {
-                        NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
-                    }
-                }
-                
+                random = false;
+                time = 3;
+
             }
-                update_ccd();
+
+            update_ccd();
         }
 
 
