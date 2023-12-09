@@ -29,7 +29,7 @@ public class IK_Scorpion : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _myController.InitLegs(legs,futureLegBases,legTargets);
+        //_myController.InitLegs(legs,futureLegBases,legTargets);
         _myController.InitTail(tail);
 
     }
