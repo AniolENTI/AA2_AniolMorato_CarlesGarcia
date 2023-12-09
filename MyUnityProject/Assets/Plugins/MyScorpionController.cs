@@ -15,7 +15,7 @@ namespace OctopusController
         Transform tailTarget;
         Transform tailEndEffector;
         MyTentacleController _tail;
-        float animationRange = 0.05f;
+        float animationRange = 3.46f;
         float growthRate = 150.0f;
 
         //LEGS
@@ -39,6 +39,7 @@ namespace OctopusController
 
         public void InitTail(Transform TailBase)
         {
+            
             _tail = new MyTentacleController();
             _tail.LoadTentacleJoints(TailBase, TentacleMode.TAIL);
             //Initialize anything needed for the Gradient Descent implementation
@@ -61,6 +62,8 @@ namespace OctopusController
         public void UpdateIK()
         {
             updateTail();
+
+            Debug.Log("Tail animation distance: " + Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position));
         }
         #endregion
 
@@ -75,9 +78,9 @@ namespace OctopusController
 
         private void updateTail()
         {
-            if(tailEndEffector != null && tailTarget != null)
+            if (tailEndEffector != null && tailTarget != null)
             {
-                if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) > animationRange)
+                if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
                 {
                     for (int i = 0; i < _tail.Bones.Length - 1; i++)
                     {

@@ -15,14 +15,13 @@ namespace OctopusController
         Transform tailTarget;
         Transform tailEndEffector;
         MyTentacleController _tail;
-        float animationRange;
-        float learningRate;
+        float animationRange = 3.46f;
+        float growthRate = 150.0f;
 
         //LEGS
         Transform[] legTargets;
         Transform[] legFutureBases;
         MyTentacleController[] _legs = new MyTentacleController[6];
-
         
         #region public
         public void InitLegs(Transform[] LegRoots,Transform[] LegFutureBases, Transform[] LegTargets)
@@ -40,15 +39,14 @@ namespace OctopusController
 
         public void InitTail(Transform TailBase)
         {
+            
             _tail = new MyTentacleController();
             _tail.LoadTentacleJoints(TailBase, TentacleMode.TAIL);
             //Initialize anything needed for the Gradient Descent implementation
-            tailEndEffector = _tail.Bones.Last();
-            learningRate = 0.1f;
-            animationRange = 0.0f;
+            tailEndEffector = _tail.Bones[_tail.Bones.Length - 1];
         }
 
-        //TODO: Check when to start the animation towards target and implement Gradient Descent method to move the joints.
+        //Check when to start the animation towards target and implement Gradient Descent method to move the joints.
         public void NotifyTailTarget(Transform target)
         {
             tailTarget = target;
@@ -61,12 +59,11 @@ namespace OctopusController
         }
 
         //TODO: create the apropiate animations and update the IK from the legs and tail
-
         public void UpdateIK()
         {
-            updateLegs();
-
             updateTail();
+
+            Debug.Log("Tail animation distance: " + Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position));
         }
         #endregion
 
@@ -81,42 +78,33 @@ namespace OctopusController
 
         private void updateTail()
         {
-            if (tailEndEffector == null)
+            if (tailEndEffector != null && tailTarget != null)
             {
-                Debug.Log("AAAAAAAAAAAAAA");
-            }
-            
-
-            // Check if the tail and target are valid
-            if (_tail != null && tailTarget != null && tailEndEffector != null)
-            {
-                // Check if the tail is within the animation range
-                if (Vector3.Distance(tailEndEffector.position, tailTarget.position) <= animationRange)
+                if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
                 {
-                    // Implement Gradient Descent to adjust joint angles
-                    for (int i = 0; i < _tail.Bones.Length; i++)
+                    for (int i = 0; i < _tail.Bones.Length - 1; i++)
                     {
-                        // Adjust joint angles based on the gradient and learning rate
-                        float gradient = calculateGradient(_tail.Bones[i]);
-                        _tail.Bones[i].Rotate(Vector3.up, gradient * learningRate);
+                        float descent = CalculateGradient(_tail.Bones[i]);
+                        _tail.Bones[i].transform.Rotate((Vector3.forward * -descent) * growthRate);
                     }
                 }
             }
         }
 
-        private float calculateGradient(Transform joint)
+        private float CalculateGradient(Transform joint)
         {
-            // Calculate gradient based on the difference between current and target rotation
-            float gradient = Quaternion.Angle(joint.rotation, Quaternion.LookRotation(tailTarget.position - joint.position, Vector3.up));
-
-
-            return gradient;
+            float distanceEffectorTarget1 = Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position);
+            joint.transform.Rotate(Vector3.forward * 0.01f);
+            float distanceEffectorTarget2 = Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position);
+            joint.transform.Rotate(Vector3.forward * -0.01f);
+            float result = (distanceEffectorTarget2 - distanceEffectorTarget1) / 0.01f;
+            return result;
         }
 
         //TODO: implement fabrik method to move legs 
         private void updateLegs()
         {
-            updateLegPos();
+            
         }
         #endregion
     }

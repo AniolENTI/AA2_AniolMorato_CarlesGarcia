@@ -44,7 +44,7 @@ namespace OctopusController
                 case TentacleMode.TAIL:
                     //TODO: in _endEffectorsphere you keep a reference to the red sphere 
                     bonesListTail.Add(root);
-                    _endEffectorSphere = bonesListLeg.Last();
+                    _endEffectorSphere = bonesListTail.Last();
                     _bones = bonesListTail.ToArray();
                     break;
                 case TentacleMode.TENTACLE:
