@@ -82,8 +82,10 @@ namespace OctopusController
             {
                 if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
                 {
+                    Debug.Log($"_tail.Bones.Length: {_tail.Bones.Length}");
                     for (int i = 0; i < _tail.Bones.Length - 1; i++)
                     {
+                        Debug.Log($"Rotating bone {i}");
                         float descent = CalculateGradient(_tail.Bones[i]);
                         _tail.Bones[i].transform.Rotate((Vector3.forward * -descent) * growthRate);
                     }
