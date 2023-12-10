@@ -22,6 +22,7 @@ namespace OctopusController
         Transform[] legTargets;
         Transform[] legFutureBases;
         MyTentacleController[] _legs = new MyTentacleController[6];
+        bool playingAnimation = false;
         
         #region public
         public void InitLegs(Transform[] LegRoots,Transform[] LegFutureBases, Transform[] LegTargets)
@@ -32,7 +33,9 @@ namespace OctopusController
             {
                 _legs[i] = new MyTentacleController();
                 _legs[i].LoadTentacleJoints(LegRoots[i], TentacleMode.LEG);
-                //TODO: initialize anything needed for the FABRIK implementation
+                //Initialize anything needed for the FABRIK implementation
+                legFutureBases[i] = LegFutureBases[i];
+                legTargets[i] = LegTargets[i];
             }
 
         }
@@ -55,7 +58,7 @@ namespace OctopusController
         //TODO: Notifies the start of the walking animation
         public void NotifyStartWalk()
         {
-            
+            playingAnimation = true;
         }
 
         //TODO: create the apropiate animations and update the IK from the legs and tail
@@ -64,6 +67,15 @@ namespace OctopusController
             updateTail();
 
             Debug.Log("Tail animation distance: " + Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position));
+
+            if(playingAnimation)
+            {
+                updateLegPos();
+                if(Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
+                {
+                    playingAnimation = false;
+                }
+            }
         }
         #endregion
 
