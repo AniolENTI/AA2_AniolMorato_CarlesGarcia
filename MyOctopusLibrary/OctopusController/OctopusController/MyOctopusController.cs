@@ -19,6 +19,7 @@ namespace OctopusController
         Transform _currentRegion;
         Transform _target;
 
+
         Transform[] _randomTargets;// = new Transform[4];
 
 
@@ -26,7 +27,7 @@ namespace OctopusController
         Vector3 targetPosition;
         Vector3 targetRegion;
         float sqrDistance;
-        bool random = true;
+        bool random = false;
         float time = 3f;
 
         float _twistMin, _twistMax;
@@ -81,18 +82,15 @@ namespace OctopusController
             _target = target;
             targetPosition = new Vector3(target.position.x, target.position.y, target.position.z);
             targetRegion = new Vector3(region.position.x, region.position.y, region.position.z);
-
+            UnityEngine.Debug.Log("notify target");
 
         }
 
         public void NotifyShoot()
         {
             //TODO. what happens here?
-            for (int i = 0; i < _tentacles.Length; i++)
-            {
-                NotifyTarget(_tentacles[i].GetEffector, _randomTargets[i].parent);
-                random = false;
-            }
+            random = true;
+
             UnityEngine.Debug.Log("Shoot");
         }
 
@@ -101,65 +99,15 @@ namespace OctopusController
         {
             //TODO: implement logic for the correct tentacle arm to stop the ball and implement CCD method
 
-
             if (random)
             {
-
                 for (int i = 0; i < _tentacles.Length; i++)
                 {
-                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
-
-                    Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
-
-                    for (int j = 0; j < _tentacles[i].Bones.Count() - 2; j++)
-                    {
-                        for (int k = 1; k < j + 3 && k < _tentacles[i].Bones.Count(); k++)
-                        {
-                            RotateBone(_tentacles[i].Bones[0], _tentacles[i].Bones[k], goalPosition);
-
-                            sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
-                        }
-                    }
-
-
+                    NotifyTarget(_target, _randomTargets[i].parent);
                 }
+
             }
-            else
-            {
 
-
-                for (int i = 0; i < _tentacles.Length; i++)
-                {
-
-                    Vector3 goalPosition = Vector3.Lerp(targetRegion, targetPosition, 1f);
-
-                    for (int j = 0; j < _tentacles[i].Bones.Count() - 2; j++)
-                    {
-                        for (int k = 1; k < j + 3 && k < _tentacles[i].Bones.Count(); k++)
-                        {
-                            RotateBone(_tentacles[i].Bones[0], _tentacles[i].Bones[k], goalPosition);
-
-                            sqrDistance = (_tentacles[0].Bones[0].position - goalPosition).sqrMagnitude;
-
-
-                        }
-
-                        for (int k = 0; k < _tentacles.Length; k++)
-                        {
-                            for (int l = 0; l < _tentacles[i].Bones.Length; l++)
-                            {
-                                if (!_randomTargets[k].parent.GetComponent<BoxCollider>().bounds.Contains(_tentacles[k].Bones[l].position))
-                                {
-                                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
-                                }
-                            }
-
-                        }
-                    }
-
-
-                }
-            }
 
             if (random && (time - Time.deltaTime <= 0))
             {
@@ -180,25 +128,56 @@ namespace OctopusController
         #region private and internal methods
         //todo: add here anything that you need
 
-        public static void RotateBone(Transform effector, Transform bone, Vector3 targetPosition)
+        public static void RotateJoint(Transform bone, float angle, Vector3 targetDirection)
         {
-            Vector3 effectorPosition = effector.position;
-            Vector3 bonePosition = bone.position;
-            Quaternion boneRotation = bone.rotation;
+            if (targetDirection == Vector3.up)
+            {
+                bone.transform.Rotate(Vector3.up, angle);
+            }
+            else if (targetDirection == Vector3.down)
+            {
+                bone.transform.Rotate(Vector3.down, angle);
+            }
+            else if (targetDirection == Vector3.left)
+            {
+                bone.transform.Rotate(Vector3.left, angle);
+            }
+            else if (targetDirection == Vector3.right)
+            {
+                bone.transform.Rotate(Vector3.right, angle);
+            }
+            else
+            {
+                bone.transform.Rotate(targetDirection, angle);
+            }
 
-            Vector3 boneToEffector = effectorPosition - bonePosition;
-            Vector3 boneToTarget = targetPosition - bonePosition;
-
-            Quaternion fromToRotation = Quaternion.FromToRotation(boneToEffector, boneToTarget);
-            Quaternion newRotation = fromToRotation * boneRotation;
-
-            boneRotation = newRotation;
         }
 
         void update_ccd()
         {
 
+            for (int i = 0; i < _tentacles.Length; i++)
+            {
+                MyTentacleController tentacle = _tentacles[i];
 
+                NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+                Vector3 currentPosition = tentacle.GetEffector.position;
+                Vector3 targetDirection = _target.position - currentPosition;
+
+
+                for (int j = tentacle.Bones.Length - 1; j >= 0; j--)
+                {
+
+                    Vector3 jointPosition = tentacle.Bones[j].position;
+                    Vector3 jointToTarget = _target.position - jointPosition;
+
+
+                    float angle = Vector3.Angle(jointToTarget, targetDirection);
+
+
+                    RotateJoint(tentacle.Bones[j], angle, targetDirection);
+                }
+            }
         }
 
 
@@ -213,3 +192,4 @@ namespace OctopusController
 
     }
 }
+
