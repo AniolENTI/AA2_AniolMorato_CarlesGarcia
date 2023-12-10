@@ -23,7 +23,10 @@ namespace OctopusController
         Transform[] legFutureBases;
         MyTentacleController[] _legs = new MyTentacleController[6];
         bool playingAnimation = false;
-        
+        float futureBaseDistance = 1f;
+        Vector3[] virtualLegs;
+        float[] legDistanceCheck;
+
         #region public
         public void InitLegs(Transform[] LegRoots,Transform[] LegFutureBases, Transform[] LegTargets)
         {
@@ -37,6 +40,8 @@ namespace OctopusController
                 legFutureBases[i] = LegFutureBases[i];
                 legTargets[i] = LegTargets[i];
             }
+            virtualLegs = new Vector3[_legs[0].Bones.Length];
+            legDistanceCheck = new float[_legs[0].Bones.Length - 1];
 
         }
 
@@ -71,6 +76,7 @@ namespace OctopusController
             if(playingAnimation)
             {
                 updateLegPos();
+
                 if(Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
                 {
                     playingAnimation = false;
@@ -85,7 +91,18 @@ namespace OctopusController
         private void updateLegPos()
         {
             //check for the distance to the futureBase, then if it's too far away start moving the leg towards the future base position
-            
+            for (int i = 0; i < 6; i++)
+            {
+                RaycastHit suelo;
+                if (Vector3.Distance(_legs[i].Bones[0].position, legFutureBases[i].position) > futureBaseDistance)
+                {
+                    if (Physics.Raycast(legFutureBases[i].position + Vector3.up * 10.0f, Vector3.down, out suelo, Mathf.Infinity))
+                    {
+                        _legs[i].Bones[0].position = Vector3.Lerp(_legs[i].Bones[0].position, legFutureBases[i].position, 1.4f);
+                    }
+                }
+                updateLegs(i);
+            }
         }
 
         private void updateTail()
@@ -116,7 +133,7 @@ namespace OctopusController
         }
 
         //TODO: implement fabrik method to move legs 
-        private void updateLegs()
+        private void updateLegs(int legIndex)
         {
             
         }
