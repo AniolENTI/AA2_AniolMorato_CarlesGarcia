@@ -39,19 +39,19 @@ namespace OctopusController
             {
                 case TentacleMode.LEG:
                     //TODO: in _endEffectorsphere you keep a reference to the base of the leg                   
-                    bonesListLeg.Add(root);
+                    AddToList(root, bonesListLeg);
                     _endEffectorSphere = bonesListLeg.First();
-                    _bones = bonesListTail.ToArray();
+                    _bones = bonesListLeg.ToArray();
                     break;
                 case TentacleMode.TAIL:
                     //TODO: in _endEffectorsphere you keep a reference to the red sphere 
-                    bonesListTail.Add(root);
-                    _endEffectorSphere = bonesListLeg.Last();
+                    AddToList(root, bonesListTail);
+                    _endEffectorSphere = bonesListTail.Last();
                     _bones = bonesListTail.ToArray();
                     break;
                 case TentacleMode.TENTACLE:
                     //TODO: in _endEffectorphere you  keep a reference to the sphere with a collider attached to the endEffector
-                    bonesListTentacle.Add(root);
+                    AddToList(root, bonesListTentacle);
                     _endEffectorSphere = bonesListTentacle.Last();
                     _bones = bonesListTentacle.ToArray();
                     break;
@@ -60,5 +60,22 @@ namespace OctopusController
             }
             return Bones;
         }
+
+        void AddToList(Transform articulation, List<Transform> lista)
+        {
+            // Agregar la articulación actual a la lista
+            lista.Add(articulation);
+
+            // Verificar si la articulación actual tiene hijos
+            if (articulation.childCount > 0)
+            {
+                // Recorrer de manera recursiva los hijos de la articulación actual
+                foreach (Transform hijo in articulation)
+                {
+                    AddToList(hijo, lista);
+                }
+            }
+        }
+
     }
 }
