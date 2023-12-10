@@ -19,10 +19,14 @@ namespace OctopusController
         float growthRate = 150.0f;
 
         //LEGS
-        Transform[] legTargets;
-        Transform[] legFutureBases;
+        Transform[] legTargets = new Transform[6];
+        Transform[] legFutureBases = new Transform[6];
         MyTentacleController[] _legs = new MyTentacleController[6];
-        
+        bool playingAnimation = false;
+        float futureBaseDistance = 1f;
+        Vector3[] virtualLegs;
+        float[] legDistanceCheck;
+
         #region public
         public void InitLegs(Transform[] LegRoots,Transform[] LegFutureBases, Transform[] LegTargets)
         {
@@ -32,8 +36,12 @@ namespace OctopusController
             {
                 _legs[i] = new MyTentacleController();
                 _legs[i].LoadTentacleJoints(LegRoots[i], TentacleMode.LEG);
-                //TODO: initialize anything needed for the FABRIK implementation
+                //Initialize anything needed for the FABRIK implementation
+                legFutureBases[i] = LegFutureBases[i];
+                legTargets[i] = LegTargets[i];
             }
+            virtualLegs = new Vector3[_legs[0].Bones.Length];
+            legDistanceCheck = new float[_legs[0].Bones.Length - 1];
 
         }
 
@@ -52,18 +60,30 @@ namespace OctopusController
             tailTarget = target;
         }
 
-        //TODO: Notifies the start of the walking animation
+        //Notifies the start of the walking animation
         public void NotifyStartWalk()
         {
-            
+            playingAnimation = true;
+
+            Debug.Log("Starting Leg Animation");
         }
 
-        //TODO: create the apropiate animations and update the IK from the legs and tail
+        //Create the apropiate animations and update the IK from the legs and tail
         public void UpdateIK()
         {
             updateTail();
 
-            Debug.Log("Tail animation distance: " + Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position));
+            if(playingAnimation)
+            {
+                updateLegPos();
+
+                if(Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
+                {
+                    Debug.Log("Stopping Leg Animation");
+
+                    playingAnimation = false;
+                }
+            }
         }
         #endregion
 
@@ -73,7 +93,19 @@ namespace OctopusController
         private void updateLegPos()
         {
             //check for the distance to the futureBase, then if it's too far away start moving the leg towards the future base position
-            
+            for (int i = 0; i < 6; i++)
+            {
+                Debug.Log("Starting Leg Base Distance Check");
+
+
+
+                if (Vector3.Distance(_legs[i].Bones[0].position, legFutureBases[i].position) > futureBaseDistance)
+                {
+                    Debug.Log($"Checking bone {i}");
+                    _legs[i].Bones[0].position = Vector3.Lerp(_legs[i].Bones[0].position, legFutureBases[i].position, 1.4f);
+                }
+                updateLegs(i);
+            }
         }
 
         private void updateTail()
@@ -82,10 +114,8 @@ namespace OctopusController
             {
                 if (Vector3.Distance(tailEndEffector.transform.position, tailTarget.transform.position) < animationRange)
                 {
-                    Debug.Log($"_tail.Bones.Length: {_tail.Bones.Length}");
                     for (int i = 0; i < _tail.Bones.Length - 1; i++)
                     {
-                        Debug.Log($"Rotating bone {i}");
                         float descent = CalculateGradient(_tail.Bones[i]);
                         _tail.Bones[i].transform.Rotate((Vector3.forward * -descent) * growthRate);
                     }
@@ -104,9 +134,59 @@ namespace OctopusController
         }
 
         //TODO: implement fabrik method to move legs 
-        private void updateLegs()
+        private void updateLegs(int legIndex)
         {
-            
+            Debug.Log($"Updating bone {legIndex}");
+
+            // Save the position of the bones in copy
+            for (int i = 0; i <= _legs[0].Bones.Length - 1; i++)
+            {
+                virtualLegs[i] = _legs[legIndex].Bones[i].position;
+            }
+
+            // Calculate the distance between the bones
+            for (int i = 0; i <= _legs[legIndex].Bones.Length - 2; i++)
+            {
+                legDistanceCheck[i] = Vector3.Distance(_legs[legIndex].Bones[i].position, _legs[legIndex].Bones[i + 1].position);
+            }
+
+            float targetDistance = Vector3.Distance(virtualLegs[0], legTargets[legIndex].position);
+
+            if (targetDistance < legDistanceCheck.Sum())
+            {
+                while (Vector3.Distance(virtualLegs[virtualLegs.Length - 1], legTargets[legIndex].position) != 0 || Vector3.Distance(virtualLegs[0], _legs[legIndex].Bones[0].position) != 0)
+                {
+                    virtualLegs[virtualLegs.Length - 1] = legTargets[legIndex].position;
+
+                    for (int i = _legs[legIndex].Bones.Length - 2; i >= 0; i--)
+                    {
+                        Vector3 directonVector1 = (virtualLegs[i + 1] - virtualLegs[i]).normalized;
+                        Vector3 movementVector1 = directonVector1 * legDistanceCheck[i];
+                        virtualLegs[i] = virtualLegs[i + 1] - movementVector1;
+                    }
+
+                    virtualLegs[0] = _legs[legIndex].Bones[0].position;
+
+                    for (int i = 1; i < _legs[legIndex].Bones.Length - 1; i++)
+                    {
+                        Vector3 directonVector2 = (virtualLegs[i - 1] - virtualLegs[i]).normalized;
+                        Vector3 movementVector2 = directonVector2 * legDistanceCheck[i - 1];
+                        virtualLegs[i] = virtualLegs[i - 1] - movementVector2;
+
+                    }
+                }
+
+                // Update real legs
+                for (int i = 0; i <= _legs[legIndex].Bones.Length - 2; i++)
+                {
+                    Vector3 directionVector = (virtualLegs[i + 1] - virtualLegs[i]).normalized;
+                    Vector3 antMovement = (_legs[legIndex].Bones[i + 1].position - _legs[legIndex].Bones[i].position).normalized;
+                    Quaternion legRotation = Quaternion.FromToRotation(antMovement, directionVector);
+
+
+                    _legs[legIndex].Bones[i].rotation = legRotation * _legs[legIndex].Bones[i].rotation;
+                }
+            }
         }
         #endregion
     }
