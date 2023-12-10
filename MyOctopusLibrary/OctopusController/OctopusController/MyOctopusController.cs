@@ -139,11 +139,11 @@ namespace OctopusController
         #region private and internal methods
         //todo: add here anything that you need
 
-        public static void RotateJoint(Transform bone, float angle, Vector3 targetDirection)
+        public static void RotateJoint(Transform bone, float angle, Vector3 axis)
         {
 
 
-            bone.transform.Rotate(targetDirection, angle);
+            bone.transform.Rotate(axis, angle);
 
 
         }
@@ -165,26 +165,17 @@ namespace OctopusController
 
                     Vector3 jointPosition = tentacle.Bones[j].position;
                     Vector3 jointToTarget = _target.position - jointPosition;
-
+                    Vector3 axis = Vector3.Cross(targetDirection, Vector3.up).normalized;
 
                     float angle = Vector3.Angle(jointToTarget, targetDirection);
 
 
-                    RotateJoint(tentacle.Bones[j], angle, targetDirection);
+                    RotateJoint(tentacle.Bones[j], angle, axis);
                 }
             }
         }
 
-
-
-
         #endregion
-
-
-
-
-
 
     }
 }
-
