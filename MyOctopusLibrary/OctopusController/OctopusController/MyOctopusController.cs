@@ -104,17 +104,28 @@ namespace OctopusController
                 for (int i = 0; i < _tentacles.Length; i++)
                 {
                     NotifyTarget(_target, _randomTargets[i].parent);
+                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+                }
+
+                if (time - Time.deltaTime <= 0)
+                {
+                    random = false;
+                    time = 3;
+
                 }
 
             }
-
-
-            if (random && (time - Time.deltaTime <= 0))
+            else
             {
-                random = false;
-                time = 3;
+                for (int i = 0; i < _tentacles.Length; i++)
+                {
 
+                    NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+                }
             }
+
+
+
 
             update_ccd();
         }
@@ -130,26 +141,10 @@ namespace OctopusController
 
         public static void RotateJoint(Transform bone, float angle, Vector3 targetDirection)
         {
-            if (targetDirection == Vector3.up)
-            {
-                bone.transform.Rotate(Vector3.up, angle);
-            }
-            else if (targetDirection == Vector3.down)
-            {
-                bone.transform.Rotate(Vector3.down, angle);
-            }
-            else if (targetDirection == Vector3.left)
-            {
-                bone.transform.Rotate(Vector3.left, angle);
-            }
-            else if (targetDirection == Vector3.right)
-            {
-                bone.transform.Rotate(Vector3.right, angle);
-            }
-            else
-            {
-                bone.transform.Rotate(targetDirection, angle);
-            }
+
+
+            bone.transform.Rotate(targetDirection, angle);
+
 
         }
 
@@ -160,7 +155,7 @@ namespace OctopusController
             {
                 MyTentacleController tentacle = _tentacles[i];
 
-                NotifyTarget(_randomTargets[i], _randomTargets[i].parent);
+
                 Vector3 currentPosition = tentacle.GetEffector.position;
                 Vector3 targetDirection = _target.position - currentPosition;
 
